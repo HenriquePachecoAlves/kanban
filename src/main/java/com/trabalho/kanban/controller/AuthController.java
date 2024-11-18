@@ -1,6 +1,6 @@
-package com.trabalho.kanban.controller;
+package com.novo.projeto.controller;
 
-import com.trabalho.kanban.config.JwtUtil;
+import com.novo.projeto.config.TokenUtility;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -13,20 +13,20 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     @Autowired
-    private AuthenticationManager authenticationManager;
+    private AuthenticationManager authManager;
 
     @Autowired
-    private JwtUtil jwtUtil;
+    private TokenUtility tokenUtility;
 
-    @PostMapping("/login")
-    public String login(@RequestBody AuthRequest authRequest) throws Exception {
+    @PostMapping("/signin")
+    public String signIn(@RequestBody AuthRequest request) throws Exception {
         try {
-            Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword())
+            Authentication auth = authManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
             );
-            return jwtUtil.generateToken(authRequest.getUsername());
+            return tokenUtility.createToken(request.getUsername());
         } catch (AuthenticationException e) {
-            throw new Exception("Invalid credentials");
+            throw new Exception("Invalid login details");
         }
     }
 }

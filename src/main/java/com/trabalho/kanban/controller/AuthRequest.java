@@ -1,4 +1,4 @@
-package com.trabalho.kanban.controller;
+package com.novo.projeto.controller;
 
 public class AuthRequest {
     private String username;

@@ -1,4 +1,4 @@
-package com.trabalho.kanban.config;
+package com.novo.projeto.config;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -18,42 +18,43 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 
 @Component
-public class JwtAuthenticationFilter extends OncePerRequestFilter implements ApplicationContextAware {
+public class AuthFilter extends OncePerRequestFilter implements ApplicationContextAware {
 
-    private ApplicationContext applicationContext;
+    private ApplicationContext context;
+
     @Autowired
-    private JwtUtil jwtUtil;
+    private TokenUtility tokenUtility;
 
     @Override
-    public void setApplicationContext(ApplicationContext applicationContext) {
-        this.applicationContext = applicationContext;
+    public void setApplicationContext(ApplicationContext context) {
+        this.context = context;
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
 
-        String authorizationHeader = request.getHeader("Authorization");
-        String username = null;
+        String authHeader = request.getHeader("Authorization");
+        String user = null;
         String token = null;
 
-        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
-            token = authorizationHeader.substring(7);
-            username = jwtUtil.extractUsername(token);
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            token = authHeader.substring(7);
+            user = tokenUtility.getUsernameFromToken(token);
         }
 
-        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetailsService userDetailsService = applicationContext.getBean(UserDetailsService.class);
-            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+        if (user != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            UserDetailsService userService = context.getBean(UserDetailsService.class);
+            UserDetails details = userService.loadUserByUsername(user);
 
-            if (jwtUtil.validateToken(token, userDetails.getUsername())) {
+            if (tokenUtility.isValidToken(token, details.getUsername())) {
                 UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                        userDetails, null, userDetails.getAuthorities());
+                        details, null, details.getAuthorities());
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         }
 
-        filterChain.doFilter(request, response);
+        chain.doFilter(request, response);
     }
 }

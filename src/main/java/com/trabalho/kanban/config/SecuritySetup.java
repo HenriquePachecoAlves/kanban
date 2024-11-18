@@ -1,5 +1,6 @@
 package com.trabalho.kanban.config;
 
+import com.novo.projeto.config.AuthFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,43 +18,43 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
-public class SecurityConfig {
+public class SecuritySetup {
 
     @Autowired
-    private JwtAuthenticationFilter jwtAuthenticationFilter;
+    private AuthFilter authFilter;
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/login").permitAll()
+                        .requestMatchers("/auth/signin").permitAll() // Certifique-se de que a rota está correta
                         .anyRequest().authenticated()
                 )
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
     @Bean
-    public UserDetailsService userDetailsService() {
-        InMemoryUserDetailsManager manager = new InMemoryUserDetailsManager();
-        manager.createUser(User.withUsername("usuario_exemplo")
-                .password(passwordEncoder().encode("senha_exemplo"))
+    public UserDetailsService userService() {
+        InMemoryUserDetailsManager userManager = new InMemoryUserDetailsManager();
+        userManager.createUser(User.withUsername("usuario_exemplo") // Usuário original
+                .password(encoder().encode("senha_exemplo")) // Senha original
                 .roles("USER")
                 .build());
-        return manager;
+        return userManager;
     }
 
     @Bean
-    public PasswordEncoder passwordEncoder() {
+    public PasswordEncoder encoder() {
         return new BCryptPasswordEncoder();
     }
 
     @Bean
-    public AuthenticationManager authenticationManagerBean(HttpSecurity http) throws Exception {
-        AuthenticationManagerBuilder builder = http.getSharedObject(AuthenticationManagerBuilder.class);
-        builder.userDetailsService(userDetailsService()).passwordEncoder(passwordEncoder());
-        return builder.build();
+    public AuthenticationManager authManager(HttpSecurity http) throws Exception {
+        AuthenticationManagerBuilder authBuilder = http.getSharedObject(AuthenticationManagerBuilder.class);
+        authBuilder.userDetailsService(userService()).passwordEncoder(encoder());
+        return authBuilder.build();
     }
 }
