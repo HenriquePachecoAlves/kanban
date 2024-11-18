@@ -87,10 +87,4 @@ public class Task {
         IN_PROGRESS,
         DONE
     }
-
-    public enum Priority {
-        LOW,
-        MEDIUM,
-        HIGH
-    }
 }
